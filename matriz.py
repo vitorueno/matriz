@@ -156,6 +156,20 @@ class Matriz:
 
         self.isJordan = True
 
+    def retrosubstituicao(self):
+        if not self.isGauss:
+            self.gauss()
+
+        result = Matriz(self.l, 1)
+
+        for i in range(self.l-1, -1, -1):
+            soma = 0
+            for j in range(i + 1, self.l):
+                soma += self.m[i][j] * result.m[j][0]
+            result.m[i][0] = (self.m[i][-1] - soma) / self.m[i][i]
+
+        return result
+
 
 class Matriz_Teste(unittest.TestCase):
     def test_init(self):
@@ -304,6 +318,25 @@ class Matriz_Teste(unittest.TestCase):
 
         self.assertEqual(m1.m, [[50, 25], [20, 10]])
 
+    def test_retro_sub(self):
+        m1 = Matriz.from_list([
+            [2, 3, 1, 0, 9],
+            [3, 1, 2, 1, 9],
+            [2, 1, 3, 4, 15],
+            [1, 2, 4, 3, 15]])
+
+        m1.gauss()
+
+        result = m1.retrosubstituicao()
+
+        self.assertEqual(result.m, [[1.0], [2.0], [1.0], [2.0]])
+
+        m1.jordan()
+
+        result = m1.retrosubstituicao()
+
+        self.assertEqual(result.m, [[1.0], [2.0], [1.0], [2.0]])
+
 
 def main():
     # m1 = Matriz.from_list([[1, 2], [3, 4]])
@@ -319,9 +352,9 @@ def main():
 
     # m1.gauss()
 
-    # m1.jordan()
+    # result = m1.retrosubstituicao()
 
-    # print(m1)
+    # print(result)
 
     unittest.main()
 
