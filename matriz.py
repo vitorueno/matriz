@@ -10,6 +10,8 @@ class Matriz:
         self.iniciar()
         self.isGauss = False
         self.isJordan = False
+        self.L = None
+        self.U = None
 
     @classmethod
     def from_list(self, lista):
@@ -21,6 +23,13 @@ class Matriz:
         self.isJordan = False
         return objeto
 
+    @classmethod
+    def identidade(self, ordem):
+        identidade = deepcopy(Matriz(ordem, ordem))
+        for i in range(identidade.c):
+            identidade.m[i][i] = 1
+        return identidade
+
     def iniciar(self, zeros=True):
         self.m = []
         for i in range(self.l):
@@ -29,11 +38,18 @@ class Matriz:
                 num = 0 if zeros else randint(1, 10)
                 self.m[i].append(num)  # preenche coluna
 
-    def subtrair_linha(self, indiceLinha1, indiceLinha2, multLinha1=1, multLinha2=1):
-        linha2 = [x * multLinha2 for x in self.m[indiceLinha2]]
+    def subtrair_linha(self, i1, i2, m1=1, m2=1):
+        linha2 = [x * m2 for x in self.m[i2]]
         for j in range(self.c):
-            self.m[indiceLinha1][j] = self.m[indiceLinha1][j] * \
-                multLinha1 - linha2[j]
+            self.m[i1][j] = self.m[i1][j] * m1 - linha2[j]
+
+    def div_linha_if_int(self, iLinha, num):
+        newLinha = [x/num for x in self.m[iLinha]]
+        for elemento in newLinha:
+            if not elemento.is_integer():
+                return
+
+        self.m[iLinha] = newLinha
 
     def __str__(self):
         matriz_string = ''
@@ -130,13 +146,18 @@ class Matriz:
         if self.isGauss:
             raise Exception('Matriz já passou pela eliminação de Gauss')
 
+        self.L = Matriz.identidade(self.l)
+
         for i in range(self.l-1):
             pivo = self.m[i][i]
             for k in range(i+1, self.l):
-                primeiro = self.m[k][i]
-                self.subtrair_linha(k, i, pivo, primeiro)
+                fator = self.m[k][i]
+                self.subtrair_linha(k, i, pivo, fator)
+                self.L.m[k][i] = fator/pivo
+                self.div_linha_if_int(k, pivo)
 
         self.isGauss = True
+        self.U = deepcopy(self)
 
     def jordan(self):
         if self.isJordan:
@@ -220,17 +241,29 @@ class Matriz_Teste(unittest.TestCase):
 
         self.assertEqual(m1.m, [[2, 3, 1, 0, 9],
                                 [0, -7, 1, 2, -9],
-                                [0, 0, -24, -48, -120],
-                                [0, 0, 0, -1344, -2688]])
+                                [0, 0, -12, -24, -60],
+                                [0, 0, 0, 56, 112]])
 
-    def test_gauss_jordan(self):
+    def test_LU(self):
         m1 = Matriz.from_list([
-            [2, 3, 1, 0, 9],
-            [3, 1, 2, 1, 9],
-            [2, 1, 3, 4, 15],
-            [1, 2, 4, 3, 15]])
+            [2, 4, 3, 5],
+            [-4, -7, -5, -8],
+            [6, 8, 2, 9],
+            [4, 9, -2, 14]])
+        m2 = deepcopy(m1)
 
         m1.gauss()
+
+        result = m1.L * m1.U
+
+        self.assertEqual(result.m, m2.m)
+
+    def test_jordan(self):
+        m1 = Matriz.from_list([[2, 3, 1, 0, 9],
+                               [0, -7, 1, 2, -9],
+                               [0, 0, -24, -48, -120],
+                               [0, 0, 0, -1344, -2688]])
+
         m1.jordan()
 
         self.assertEqual(m1.m, [[1.0, 0, 0, 0, 1.0],
@@ -319,43 +352,22 @@ class Matriz_Teste(unittest.TestCase):
         self.assertEqual(m1.m, [[50, 25], [20, 10]])
 
     def test_retro_sub(self):
-        m1 = Matriz.from_list([
-            [2, 3, 1, 0, 9],
-            [3, 1, 2, 1, 9],
-            [2, 1, 3, 4, 15],
-            [1, 2, 4, 3, 15]])
-
-        m1.gauss()
+        m1 = Matriz.from_list([[1.0, 0, 0, 0, 1.0],
+                              [0, 1.0, 0, 0, 2.0],
+                              [0, 0, 1.0, 0, 1.0],
+                              [0, 0, 0, 1.0, 2.0]])
 
         result = m1.retrosubstituicao()
 
         self.assertEqual(result.m, [[1.0], [2.0], [1.0], [2.0]])
 
-        m1.jordan()
+    def test_identidade(self):
+        m1 = Matriz.identidade(3)
 
-        result = m1.retrosubstituicao()
-
-        self.assertEqual(result.m, [[1.0], [2.0], [1.0], [2.0]])
+        self.assertEqual(m1.m, [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
 
 def main():
-    # m1 = Matriz.from_list([[1, 2], [3, 4]])
-    # m2 = Matriz.from_list([[1, 2], [3, 4]])
-    # m1 + m2
-
-    # print(m2)
-    # m1 = Matriz.from_list([
-    #     [2, 3, 1, 0, 9],
-    #     [3, 1, 2, 1, 9],
-    #     [2, 1, 3, 4, 15],
-    #     [1, 2, 4, 3, 15]])
-
-    # m1.gauss()
-
-    # result = m1.retrosubstituicao()
-
-    # print(result)
-
     unittest.main()
 
 
