@@ -191,6 +191,17 @@ class Matriz:
 
         return result
 
+    def substituicao_direta(self):
+        result = deepcopy(Matriz(self.l, 1))
+
+        for i in range(self.l):
+            soma = 0
+            for j in range(i):
+                soma += self.m[i][j] * result.m[j][0]
+            result.m[i][0] = (self.m[i][-1] - soma) / self.m[i][i]
+
+        return result
+
 
 class Matriz_Teste(unittest.TestCase):
     def test_init(self):
@@ -360,6 +371,18 @@ class Matriz_Teste(unittest.TestCase):
         result = m1.retrosubstituicao()
 
         self.assertEqual(result.m, [[1.0], [2.0], [1.0], [2.0]])
+
+    def test_substituicao_direta(self):
+        m1 = Matriz.from_list([
+            [2, 0, 0, 0, 6],
+            [2, 4, 0, 0, 22],
+            [1, 2, 3, 0, 29],
+            [4, 2, 1, 5, 31]
+        ])
+
+        result = m1.substituicao_direta()
+
+        self.assertEqual(result.m, [[3], [4], [6], [1]])
 
     def test_identidade(self):
         m1 = Matriz.identidade(3)
