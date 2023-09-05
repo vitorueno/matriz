@@ -1,3 +1,4 @@
+from math import sqrt
 from random import randint
 import unittest
 from copy import deepcopy
@@ -202,6 +203,23 @@ class Matriz:
 
         return result
 
+    def cholesky(self):
+        G = Matriz(self.l, self.c)
+        Gt = Matriz(self.l, self.c)
+
+        for i in range(self.c):
+            soma = sum([G.m[i][k]**2 for k in range(0, i)])
+
+            G.m[i][i] = sqrt(self.m[i][i] - soma)
+            Gt.m[i][i] = G.m[i][i]
+
+            for j in range(i+1, self.l):
+                soma = sum([G.m[i][k] * G.m[j][k] for k in range(0, j)])
+                G.m[j][i] = (self.m[j][i] - soma) / G.m[i][i]
+                Gt.m[i][j] = G.m[j][i]
+
+        return G, Gt
+
 
 class Matriz_Teste(unittest.TestCase):
     def test_init(self):
@@ -389,8 +407,31 @@ class Matriz_Teste(unittest.TestCase):
 
         self.assertEqual(m1.m, [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
+    def test_cholesky(self):
+        A = Matriz.from_list([
+            [4, 12, -16],
+            [12, 37, -43],
+            [-16, -43, 98]
+        ])
+
+        G, Gt = A.cholesky()
+
+        self.assertEqual((G * Gt).m, A.m)
+
 
 def main():
+    A = Matriz.from_list([
+        [4, 12, -16],
+        [12, 37, -43],
+        [-16, -43, 98]
+    ])
+
+    G, Gt = A.cholesky()
+
+    print(G)
+    print(Gt)
+
+    print(G * Gt)
     unittest.main()
 
 
